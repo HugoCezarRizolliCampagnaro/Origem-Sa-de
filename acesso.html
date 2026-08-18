@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seus e-books — Origem Saúde</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F7F2; --ink:#1E2A22; --ink-soft:#4B5B4F;
+    --sage:#6E8B74; --sage-deep:#3E5A44; --sage-pale:#DCE8DD;
+    --card:#FFFFFF; --line:#DAE3D8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--bg); color:var(--ink); font-family:'Manrope',sans-serif; min-height:100vh; }
+  .wrap{ max-width:640px; margin:0 auto; padding:60px 24px; }
+  h1{ font-family:'Newsreader',serif; font-weight:600; font-size:1.9rem; margin-bottom:8px; }
+  p.sub{ color:var(--ink-soft); margin-bottom:36px; }
+  .item{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:22px 24px; display:flex; align-items:center; justify-content:space-between;
+    gap:16px; margin-bottom:14px;
+  }
+  .item h3{ font-family:'Newsreader',serif; font-weight:600; font-size:1.1rem; }
+  .item a{
+    background:var(--sage-deep); color:#fff; padding:10px 20px; border-radius:999px;
+    text-decoration:none; font-weight:700; font-size:0.88rem; white-space:nowrap;
+  }
+  .state{ text-align:center; color:var(--ink-soft); padding:60px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Seus e-books</h1>
+  <p class="sub" id="subtitle">Carregando seu acesso...</p>
+  <div id="list"></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+  const list = document.getElementById('list');
+  const subtitle = document.getElementById('subtitle');
+
+  if(!token){
+    subtitle.textContent = '';
+    list.innerHTML = '<p class="state">Link inválido. Verifique se copiou o link completo do e-mail.</p>';
+  } else {
+    fetch('/api/verificar-acesso?t=' + encodeURIComponent(token))
+      .then(r => r.json())
+      .then(data => {
+        if(data.error || !data.items?.length){
+          subtitle.textContent = '';
+          list.innerHTML = '<p class="state">Não encontramos e-books nesse link. Entre em contato com o suporte.</p>';
+          return;
+        }
+        subtitle.textContent = `${data.items.length} guia${data.items.length > 1 ? 's' : ''} disponível${data.items.length > 1 ? 'is' : ''} para você.`;
+        list.innerHTML = data.items.map(item => `
+          <div class="item">
+            <h3>${item.name}</h3>
+            <a href="${item.pdfUrl}" download>Baixar PDF</a>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        subtitle.textContent = '';
+        list.innerHTML = '<p class="state">Erro ao carregar. Tente novamente em instantes.</p>';
+      });
+  }
+</script>
+</body>
+</html>
