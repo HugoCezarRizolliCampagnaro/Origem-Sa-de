@@ -32,16 +32,13 @@ export default async function handler(req, res) {
     items.push({ id, ...product });
   }
 
-  let total = items.reduce((sum, item) => sum + item.price, 0);
+  let total = Math.round(items.reduce((sum, item) => sum + item.price, 0) * 100) / 100;
 
-// Pacotes: 3 guias por R$67, ou os 16 por R$150.
-// Mesma regra usada na tela do carrinho, garantindo que o valor
-// cobrado bate com o que a pessoa viu antes de gerar o Pix.
-if (itemIds.length === 16) {
-  total = 150;
-} else if (itemIds.length === 3) {
-  total = 67;
-}
+  if (itemIds.length === 16) {
+    total = 120;
+  } else if (itemIds.length === 3) {
+    total = 26;
+  }
 
   const response = await fetch('https://app.sigilopay.com.br/api/v1/gateway/pix/receive', {
     method: 'POST',
